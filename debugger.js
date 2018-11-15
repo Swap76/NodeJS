@@ -1,6 +1,6 @@
 const express = require('express');
 const startUpDebugger=require('debug')('app:startup');
-const bdDbugger= require('debug')('app.db');
+const bdDbugger= require('debug')('app:db');
 const app=express();
 
 app.use(express.json());
