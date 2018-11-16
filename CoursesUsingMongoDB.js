@@ -8,7 +8,7 @@ app.use(express.json());
 if(app.get('env') === 'development')
 app.use(morgan('tiny'));
 
-const port= process.env.PORT || 3000;
+const port= process.env.PORT || 5000;
 
 app.listen(port,() => {
     console.log(`Listning on port ${port}....`);
@@ -18,8 +18,7 @@ mongoose.connect('mongodb://localhost/Prcatice')
  .then(() => console.log('Connected to MongoDB....'))
  .catch(err => console.error('Could not connect to MongoDB...',err)); 
 
-
- const courseSchema = mongoose.Schema({
+const courseSchema = mongoose.Schema({
     name: {
         type : String , 
         required: true,
@@ -48,33 +47,25 @@ mongoose.connect('mongodb://localhost/Prcatice')
         min: 10,
         max: 20
     }
-    
  });
 
-courseSchema.plugin(mongoosePaginate);
 const Course = mongoose.model('Course', courseSchema);
 
-app.use(function (req,res,next){
-    console.log('Athenticating.....');
-    next();
-});
-
-app.get('/',(_req,res) => {
+app.get('/',(req,res) => {
     res.send("Hello to the World Courses !!!");
     Debugger('Landing Page Initiated....');
 });
 
-app.post('/Courses',(req,res)=>{
-    async function createCourse(){
-    
-        /* const course = new Course({
+app.post('/Courses',async (req,res)=>{
+        /*  const course = new Course({
             name: 'Android',
+            index: 1,
            author: 'Rucha',
            tags: ['Frontend','Backend'],
            isPublished: true,
            price: 12
         }); */
-        const course = req.body;
+        const course = new Course(req.body);
        try{
            const result = await course.save();
            console.log(result);
@@ -82,14 +73,13 @@ app.post('/Courses',(req,res)=>{
            console.log(ex.message);
        }
        Debugger('New Course Added....');
-    }
-        createCourse(); 
-});
+    });
 
-app.put('/Courses/:id',(req,res)=>{
-    async function findCourseAndUpdate(){
-        const course = await Course
-        .find({index: {$eq : req.params.id}})
+app.put('/Courses/:id',async (req,res)=>{
+    
+        const course = await Course.findByIdAndUpdate(req.params.id,{name: req.body.name},{
+            new: true
+        });
         if(!course){
             res.status(404).send("Course Id not found");
             return;
@@ -97,40 +87,24 @@ app.put('/Courses/:id',(req,res)=>{
         course.name=req.body.name;
         res.send(course);
         Debugger('Course Modified....');
-
-    }
-    findCourseAndUpdate();
-
 })
 
 app.delete('/Courses/:id',(req,res)=>{
-    async function findCourseAndDelete(){
-        const course = await Course
-        .find({index: {$eq : req.params.id}})
-        if(!course){
+    
+        const result = Course.findByIdAndRemove(req.params.id)
+        if(!result){
             res.status(404).send("Course Id not found");
             return;
         }  
-        Course.findByIdAndRemove(course._id);
         Debugger('Course Removed ....');
-
-    }
-    findCourseAndDelete();
-
 })
-app.get('/Courses/:id',(req,res)=>{
-    async function findCourse(){
-        const course = await Course
-        .find({index: {$eq : req.params.id}})
-        console.log(course);
-    }
-    findCourse();
+app.get('/Courses/:id',async (req,res)=>{
+   
+        const course = await Course.findById(req.params.id)
+            res.send(course);
 });
-app.get('/Courses',(_req,res)=>{
-    async function getCourse(){
+app.get('/Courses',async (req,res)=>{
         const courses = await Course
         .find()
-      console.log(courses);
-      }
-      getCourse();
+        res.send(courses);
 });
